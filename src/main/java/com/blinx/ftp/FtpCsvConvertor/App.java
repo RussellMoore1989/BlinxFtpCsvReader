@@ -18,7 +18,7 @@ import com.opencsv.CSVReader;
 
 /**
  * App that connects to localhost ftp server, downloads the country.csv.
- * Then uses csv reader to print some infomation in the file
+ * Then uses csv reader to print some information in the file
  */
 public class App 
 {
@@ -26,14 +26,18 @@ public class App
 	public static void main( String[] args ) throws FileNotFoundException
     {
     	
-    	FTPClient ftp = new FTPClient();
+		//This would be using JPA to get your collection of server information from the db.
+		//Most likely a list of objects with the below attributes, I'm just using a simplified version here
+    	String server = "localhost";
     	String username = "user";
     	String password = "qwerty";
+    	
+    	FTPClient ftp = new FTPClient();
         boolean error = false;
         
+        //This try is where you loop through the list of server information
         try {
         	int reply;
-        	String server = "localhost";
         	ftp.connect(server);
         	ftp.login(username, password);
         	System.out.println("Connected to " + server + ".");
@@ -58,9 +62,13 @@ public class App
         			ftp.enterLocalPassiveMode();
             		System.out.println("Entering passive mode");
         			ftp.setFileType(FTP.BINARY_FILE_TYPE);
+        			
+        			//Here you can add a check using ftp.listNames() and check files are there
+        			//Make a list of all the valid files you want
         			String csvFile = "/country.csv";
         			File downloadFile = new File("C:/Users/Rap/Downloads/country.csv");
         			
+        			//Loop through list to download close the input stream then read file.
         			OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(downloadFile));
                     InputStream inputStream = ftp.retrieveFileStream(csvFile);
                     byte[] bytesArray = new byte[4096];
@@ -80,6 +88,7 @@ public class App
 	                	CSVReader reader = new CSVReader(new FileReader(downloadFile));
 	                    List<String[]> line = reader.readAll();
 	                    
+	                    // This is to simulate the saving to the db using JPA
 	                    for(int i = 0; i < line.size(); i++ ) {
 	                        System.out.println("Country [code= " + line.get(i)[4] + " , name=" + line.get(i)[5] + "]");
 	                    }
@@ -88,6 +97,11 @@ public class App
 	                } catch (IOException e) {
 	                    e.printStackTrace();
 					}
+                    
+                    //So after all this use ftp.makeDirectory()
+                    //Then ftp.storeFile(downloadFile)
+                    //Go back to the original directory and ftp.storeFile() the log file created at the end of this process
+                    //Finally ftp.deleteFile()
                     
         		} catch(IOException ioe) {
         			System.out.println(ioe);
@@ -103,10 +117,13 @@ public class App
 	            
 	          }
         	System.exit(error ? 1 : 0);
-        }  	
+        }
+        // Here is where we finally close the connection and the loop ends and the next connection will start.
        
     	//possibly use this command to keep alive for a certain period.
         //ftp.setControlKeepAliveTimeout(600);
+        
+        //Possible ideas, could use Javas threading to actually download the files and update everything in parallel
 
     }
 }
